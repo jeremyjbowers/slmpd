@@ -23,7 +23,10 @@ def main():
     get_download_links()
     download_pdfs()
 
-def parse_links(page_content):
+def _parse_links(page_content):
+    """
+    This is a utility function for parsing a page and getting links.
+    """
     # Parse the page with BeautifulSoup.
     soup = BeautifulSoup(page_content)
     possible_links = soup.select('a')
@@ -56,7 +59,7 @@ def get_download_links():
     r = requests.get(base_url)
 
     if int(r.status_code) == 200:
-        parse_links(r.content)
+        _parse_links(r.content)
 
     # Loop over the rest of the pages. Currently: 2-6
     for page_number in range(2, 7):
@@ -71,7 +74,7 @@ def get_download_links():
         r = requests.post(base_url, data=data)
 
         if int(r.status_code) == 200:
-            parse_links(r.content)
+            _parse_links(r.content)
 
     # Convert our list of links to JSON.
     payload = json.dumps(download_links)
