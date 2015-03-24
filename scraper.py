@@ -23,12 +23,43 @@ def main():
     get_download_links()
     download_pdfs()
 
+def parse_links(page_content):
+    # Parse the page with BeautifulSoup.
+    soup = BeautifulSoup(page_content)
+    possible_links = soup.select('a')
+
+    for possible_link in possible_links:
+
+        # If the link text contains PDF or CSV, it's possibly a target.
+        if '.pdf' or '.csv' in possible_link.text.strip().lower():
+
+            # Ignore one kind of link that is incorrect.
+            if possible_link['href'].split("javascript:__doPostBack('")[1].split("',")[0] != "GridView1":
+
+                # For each link, get the filename and the download ID we need.
+                link_dict = {}
+                link_dict['filename'] = possible_link.text.strip()
+                link_dict['id'] = possible_link['href'].split("javascript:__doPostBack('")[1].split("',")[0]
+
+                # Add this little dictionary to our list of links to download.
+                download_links.append(link_dict)
+
 def get_download_links():
     """
     Step 1: Get all of the links to download.
     """
-    # Loop over all of the pages. Currently: 1-6
-    for page_number in range(1, 7):
+
+    print "Getting links from page 1."
+
+    # Get the first page. It wants a GET request and doesn't like the POST
+    # format the other pages use.
+    r = requests.get(base_url)
+
+    if int(r.status_code) == 200:
+        parse_links(r.content)
+
+    # Loop over the rest of the pages. Currently: 2-6
+    for page_number in range(2, 7):
 
         print "Getting links from page %s." % page_number
 
@@ -40,26 +71,7 @@ def get_download_links():
         r = requests.post(base_url, data=data)
 
         if int(r.status_code) == 200:
-
-            # Parse the page with BeautifulSoup.
-            soup = BeautifulSoup(r.content)
-            possible_links = soup.select('a')
-
-            for possible_link in possible_links:
-
-                # If the link text contains PDF or CSV, it's possibly a target.
-                if '.pdf' or '.csv' in possible_link.text.strip().lower():
-
-                    # Ignore one kind of link that is incorrect.
-                    if possible_link['href'].split("javascript:__doPostBack('")[1].split("',")[0] != "GridView1":
-
-                        # For each link, get the filename and the download ID we need.
-                        link_dict = {}
-                        link_dict['filename'] = possible_link.text.strip()
-                        link_dict['id'] = possible_link['href'].split("javascript:__doPostBack('")[1].split("',")[0]
-
-                        # Add this little dictionary to our list of links to download.
-                        download_links.append(link_dict)
+            parse_links(r.content)
 
     # Convert our list of links to JSON.
     payload = json.dumps(download_links)
