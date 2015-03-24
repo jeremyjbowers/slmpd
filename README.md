@@ -22,3 +22,9 @@ pip install -r requirements.txt
 ```
 
 This shouldn't download any new files until they add them.
+
+## Troubleshooting
+
+* What if the scraper stops working?
+
+Check that the `__VIEWSTATE` and other [POST data keys haven't changed](https://github.com/jeremyjbowers/slmpd/issues/2).
